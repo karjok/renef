@@ -100,6 +100,48 @@ cmake ..
 make -j$(sysctl -n hw.ncpu)
 ```
 
+### Python bindings
+
+The Python package wraps the C API via ctypes and requires no Android NDK.
+
+```bash
+# Install build tools (Ubuntu/Debian)
+sudo apt install -y build-essential cmake python3 python3-pip
+
+# Build the shared library
+git clone https://github.com/ahmeth4n/renef.git
+cd renef
+mkdir -p build && cd build
+cmake ..
+make renef_shared -j$(nproc)
+cd ..
+
+# Run tests (no device needed)
+PYTHONPATH=bindings/python python3 -m pytest bindings/python/tests/ -v
+
+# Or use unittest directly
+PYTHONPATH=bindings/python python3 -m unittest discover -s bindings/python/tests -v
+```
+
+Usage:
+
+```python
+import sys
+sys.path.insert(0, "bindings/python")
+
+from renef import Renef
+r = Renef()
+session = r.attach(1234)     # attach by PID
+# session = r.spawn("com.example.app")  # or spawn an app
+
+# Module API
+libc = session.Module.find("libc.so")
+modules = session.Module.list()
+
+# Eval Lua on the target
+ok, out, err = session.eval("print(OS.getpid())")
+```
+
 ## Learn more
 
 Visit [renef.io](https://renef.io) for docs, guides, and API reference.
